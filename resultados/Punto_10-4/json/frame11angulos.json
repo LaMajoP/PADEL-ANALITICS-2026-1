@@ -1,0 +1,32 @@
+{
+  "frame": "frame11",
+  "puntos": {
+    "cabeza": {
+      "x": 1560.47,
+      "y": 468.71
+    },
+    "hombro_d": {
+      "x": 1592.47,
+      "y": 506.35
+    },
+    "codo": {
+      "x": 1647.06,
+      "y": 547.76
+    },
+    "muñeca": {
+      "x": 1692.24,
+      "y": 553.41
+    },
+    "punta_raqueta": {
+      "x": 1746.82,
+      "y": 557.18
+    }
+  },
+  "angulos": {
+    "Codo": 149.9403,
+    "Hombro": 167.5492,
+    "Incl. Raqueta": 176.8202,
+    "Raqueta-Hombro": 158.692,
+    "Muñeca-Cabeza": 144.7276
+  }
+}

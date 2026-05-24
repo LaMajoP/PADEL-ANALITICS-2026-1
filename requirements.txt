@@ -1,4 +1,13 @@
-inference-sdk
-python-dotenv
-opencv-python
+# Análisis de datos (limpiar_dataset.py, padel_video_analysis.ipynb)
+numpy
 pandas
+
+# Anotación de video (select_frame.py)
+opencv-python
+pillow
+
+# Ejecutar el notebook en Cursor/Jupyter
+ipykernel
+
+# Nota macOS: select_frame.py también necesita Tkinter del sistema:
+#   brew install python-tk@3.11
