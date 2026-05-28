@@ -2,12 +2,11 @@
 Analizador de Video para Biomecánica del Tenis
 ────────────────────────────────────────────────
 Flujo:
-  1. Abrir video → navegar frames con botones / flechas
+  1. Abrir video → navegar frames con flechas / play / slider
   2. Guardar frames de interés → se nombran frame0, frame1, frame2…
   3. Botón "Listo" → modo anotación sobre frames guardados
   4. Marcar 5 puntos (cabeza, hombro_d, codo, muñeca, punta_raqueta)
-  5. Panel lateral muestra ángulos en tiempo real
-  6. Guardar JSON en angulos2/resultados/<video>/json/
+  5. Guardar JSON en resultados/<video>/json/
 
 Dependencias:  pip install opencv-python pillow
 """
@@ -20,7 +19,6 @@ from tkinter import filedialog, messagebox
 import cv2
 from PIL import Image, ImageTk
 
-# Carpeta de salida: angulos2/resultados/<nombre_video>/{frames,json}
 SCRIPT_DIR      = os.path.dirname(os.path.abspath(__file__))
 RESULTADOS_ROOT = os.path.join(SCRIPT_DIR, "resultados")
 
@@ -30,26 +28,23 @@ def output_dir_for_video(video_path):
     return os.path.join(RESULTADOS_ROOT, stem)
 
 
-# ─────────────────────────────────────────────────────────
-#  CONFIGURACIÓN DE ÁNGULOS (según tabla de referencia)
-# ─────────────────────────────────────────────────────────
 ANGLE_DEFINITIONS = [
-    ("Codo",              "muñeca",        "codo",    "hombro_d"),
-    ("Hombro",            "codo",          "hombro_d","cabeza"),
-    ("Incl. Raqueta",     "punta_raqueta", "muñeca",  "codo"),
-    ("Raqueta-Hombro",    "punta_raqueta", "muñeca",  "hombro_d"),
-    ("Muñeca-Cabeza",     "muñeca",        "codo",    "cabeza"),
+    ("Codo",           "muñeca",        "codo",    "hombro_d"),
+    ("Hombro",         "codo",          "hombro_d","cabeza"),
+    ("Incl. Raqueta",  "punta_raqueta", "muñeca",  "codo"),
+    ("Raqueta-Hombro", "punta_raqueta", "muñeca",  "hombro_d"),
+    ("Muñeca-Cabeza",  "muñeca",        "codo",    "cabeza"),
 ]
 
-POINT_ORDER   = ["cabeza", "hombro_d", "codo", "muñeca", "punta_raqueta"]
-POINT_LABELS  = {
+POINT_ORDER  = ["cabeza", "hombro_d", "codo", "muñeca", "punta_raqueta"]
+POINT_LABELS = {
     "cabeza":        "Cabeza",
     "hombro_d":      "Hombro D",
     "codo":          "Codo",
     "muñeca":        "Muñeca",
     "punta_raqueta": "Raqueta",
 }
-POINT_COLORS  = {
+POINT_COLORS = {
     "cabeza":        "#FF6B6B",
     "hombro_d":      "#FFD93D",
     "codo":          "#6BCB77",
@@ -57,21 +52,15 @@ POINT_COLORS  = {
     "punta_raqueta": "#FF922B",
 }
 
-# Paleta de colores de la aplicación
-BG_DARK    = "#0E0E16"
-BG_MID     = "#181826"
-BG_PANEL   = "#1D1D2E"
-ACCENT     = "#E94560"
-ACCENT2    = "#4D96FF"
-TEXT_MAIN  = "#F0F0F8"
-TEXT_DIM   = "#888899"
+BG_DARK   = "#0E0E16"
+BG_MID    = "#181826"
+ACCENT    = "#E94560"
+ACCENT2   = "#4D96FF"
+TEXT_MAIN = "#F0F0F8"
+TEXT_DIM  = "#888899"
 
 
-# ─────────────────────────────────────────────────────────
-#  UTILIDADES
-# ─────────────────────────────────────────────────────────
 def calc_angle(p1, vertex, p2):
-    """Ángulo en 'vertex' formado por los vectores vertex→p1 y vertex→p2."""
     v1 = (p1[0] - vertex[0], p1[1] - vertex[1])
     v2 = (p2[0] - vertex[0], p2[1] - vertex[1])
     m1 = math.hypot(*v1)
@@ -86,9 +75,6 @@ def cv2_to_pil(frame_bgr):
     return Image.fromarray(cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB))
 
 
-# ─────────────────────────────────────────────────────────
-#  APLICACIÓN PRINCIPAL
-# ─────────────────────────────────────────────────────────
 class App:
     def __init__(self, root: tk.Tk):
         self.root = root
@@ -97,28 +83,28 @@ class App:
         self.root.geometry("1280x780")
         self.root.minsize(900, 620)
 
-        # ── Estado de video ──
-        self.cap             = None
-        self.total_frames    = 0
-        self.current_idx     = 0
-        self.current_bgr     = None
-        self.output_dir      = None
-        self.frame_counter   = 0          # contador global de frames guardados
-        self.saved_frames    = {}         # {name: path}
+        self.cap           = None
+        self.total_frames  = 0
+        self.current_idx   = 0
+        self.current_bgr   = None
+        self.output_dir    = None
+        self.frame_counter = 0
+        self.saved_frames  = {}
+        self._playing      = False
+        self._play_job     = None
 
-        # ── Estado de anotación ──
-        self.annotation_mode       = False
-        self.ann_frame_names       = []   # nombres ordenados
-        self.ann_current_name      = None
-        self.ann_img_rgb           = None # numpy array RGB
-        self.ann_list_idx          = 0
-        self.points                = {}   # {label: (x_orig, y_orig)}
-        self.next_point_idx        = 0
+        self.annotation_mode  = False
+        self.ann_frame_names  = []
+        self.ann_current_name = None
+        self.ann_img_rgb      = None
+        self.ann_list_idx     = 0
+        self.points           = {}
+        self.next_point_idx   = 0
 
-        # ── Variables de layout de canvas ──
         self.canvas_offset = (0, 0)
         self.canvas_scale  = 1.0
         self.orig_size     = (1, 1)
+        self._slider_dragging = False
 
         self._build_ui()
         self._bind_keys()
@@ -127,13 +113,13 @@ class App:
     #  CONSTRUCCIÓN DE INTERFAZ
     # ─────────────────────────────────────────
     def _build_ui(self):
-        # ── Barra superior ──
+        # Barra superior
         topbar = tk.Frame(self.root, bg=BG_MID, height=54)
         topbar.pack(fill=tk.X, side=tk.TOP)
         topbar.pack_propagate(False)
 
         self._btn(topbar, "📂  Abrir Video", self._open_video,
-                  bg="#253B6E", pad=(18,0)).pack(side=tk.LEFT, padx=12, pady=8)
+                  bg="#253B6E").pack(side=tk.LEFT, padx=12, pady=8)
 
         self.lbl_frame = tk.Label(topbar, text="Sin video", bg=BG_MID,
                                    fg=TEXT_DIM, font=("Courier New", 11))
@@ -143,68 +129,37 @@ class App:
                                    fg=ACCENT2, font=("Courier New", 11, "bold"))
         self.lbl_saved.pack(side=tk.LEFT, padx=10)
 
-        # ── Área central ──
-        center = tk.Frame(self.root, bg=BG_DARK)
-        center.pack(fill=tk.BOTH, expand=True)
+        # Slider de progreso (takefocus=0 para que las flechas del teclado no lo controlen)
+        slider_bar = tk.Frame(self.root, bg=BG_MID, height=28)
+        slider_bar.pack(fill=tk.X, side=tk.TOP)
+        slider_bar.pack_propagate(False)
+        self.frame_slider = tk.Scale(
+            slider_bar, from_=0, to=1, orient=tk.HORIZONTAL,
+            bg=BG_MID, fg=TEXT_DIM, troughcolor="#252538",
+            highlightthickness=0, bd=0, sliderrelief=tk.FLAT,
+            activebackground=ACCENT2, showvalue=False,
+            command=self._on_slider_move,
+            takefocus=0,
+        )
+        self.frame_slider.pack(fill=tk.X, padx=10, pady=2)
 
-        # Canvas de imagen
-        self.canvas = tk.Canvas(center, bg="#090910", highlightthickness=0, cursor="crosshair")
-        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(10, 0), pady=10)
+        # Canvas principal (ocupa todo el espacio)
+        self.canvas = tk.Canvas(self.root, bg="#090910", highlightthickness=0, cursor="crosshair")
+        self.canvas.pack(fill=tk.BOTH, expand=True, padx=10, pady=(10, 0))
         self.canvas.bind("<Button-1>", self._on_canvas_click)
 
-        # Panel lateral
-        self._build_side_panel(center)
-
-        # ── Barra inferior (controles) ──
+        # Barra inferior de controles
         self.ctrl_bar = tk.Frame(self.root, bg=BG_MID, height=60)
         self.ctrl_bar.pack(fill=tk.X, side=tk.BOTTOM)
         self.ctrl_bar.pack_propagate(False)
         self._build_video_controls()
 
-    def _build_side_panel(self, parent):
-        panel = tk.Frame(parent, bg=BG_PANEL, width=230)
-        panel.pack(side=tk.RIGHT, fill=tk.Y, padx=10, pady=10)
-        panel.pack_propagate(False)
-        self.side_panel = panel
-
-        tk.Label(panel, text="ÁNGULOS", bg=BG_PANEL, fg=ACCENT,
-                  font=("Courier New", 13, "bold")).pack(pady=(16, 8))
-
-        sep = tk.Frame(panel, bg=ACCENT, height=1)
-        sep.pack(fill=tk.X, padx=12, pady=(0, 12))
-
-        self.angle_vars = {}
-        for name, *_ in ANGLE_DEFINITIONS:
-            card = tk.Frame(panel, bg="#252538", relief=tk.FLAT)
-            card.pack(fill=tk.X, padx=10, pady=4, ipady=6)
-            tk.Label(card, text=name.upper(), bg="#252538", fg=TEXT_DIM,
-                      font=("Courier New", 8, "bold")).pack()
-            var = tk.StringVar(value="—°")
-            tk.Label(card, textvariable=var, bg="#252538", fg=TEXT_MAIN,
-                      font=("Courier New", 20, "bold")).pack()
-            self.angle_vars[name] = var
-
-        tk.Frame(panel, bg="#252538", height=1).pack(fill=tk.X, padx=12, pady=10)
-
-        self.lbl_next_point = tk.Label(panel, text="", bg=BG_PANEL, fg="#FFD93D",
-                                        font=("Courier New", 10, "bold"),
-                                        justify=tk.CENTER, wraplength=200)
-        self.lbl_next_point.pack(pady=4)
-
-        self.lbl_point_count = tk.Label(panel, text="", bg=BG_PANEL, fg=TEXT_DIM,
-                                         font=("Courier New", 9))
-        self.lbl_point_count.pack()
-
     def _build_video_controls(self):
-        """Controles del modo video (navegación + guardar + listo)."""
         for w in self.ctrl_bar.winfo_children():
             w.destroy()
 
-        self._btn(self.ctrl_bar, "◀  Anterior", self._prev_frame,
-                  bg="#253B6E").pack(side=tk.LEFT, padx=(12, 4), pady=10)
-
-        self._btn(self.ctrl_bar, "Siguiente  ▶", self._next_frame,
-                  bg="#253B6E").pack(side=tk.LEFT, padx=4, pady=10)
+        self.btn_play = self._btn(self.ctrl_bar, "▶  Play", self._toggle_play, bg="#2D5A8E")
+        self.btn_play.pack(side=tk.LEFT, padx=12, pady=10)
 
         self._btn(self.ctrl_bar, "💾  Guardar Frame", self._save_frame,
                   bg="#1A4731").pack(side=tk.LEFT, padx=14, pady=10)
@@ -214,7 +169,6 @@ class App:
         self.btn_done.pack(side=tk.LEFT, padx=4, pady=10)
 
     def _build_annotation_controls(self):
-        """Controles del modo anotación (lista + reset + guardar JSON)."""
         for w in self.ctrl_bar.winfo_children():
             w.destroy()
 
@@ -238,7 +192,6 @@ class App:
         self._refresh_listbox()
         if self.ann_frame_names:
             self.listbox.selection_set(0)
-
         self.listbox.bind("<<ListboxSelect>>", self._on_listbox_select)
 
         self._btn(self.ctrl_bar, "🔄 Reset", self._reset_points,
@@ -248,10 +201,7 @@ class App:
                                         self._save_json, bg="#1A4731")
         self.btn_save_json.pack(side=tk.LEFT, padx=4, pady=10)
 
-    # ─────────────────────────────────────────
-    #  HELPERS UI
-    # ─────────────────────────────────────────
-    def _btn(self, parent, text, command, bg="#253B6E", pad=(14, 0)):
+    def _btn(self, parent, text, command, bg="#253B6E"):
         return tk.Button(
             parent, text=text, command=command,
             bg=bg, fg="#000000", activebackground=bg, activeforeground="#000000",
@@ -260,16 +210,21 @@ class App:
             bd=0, highlightthickness=0,
         )
 
-    def _flash(self, widget, color_ok, color_orig, ms=400):
-        widget.config(bg=color_ok)
-        self.root.after(ms, lambda: widget.config(bg=color_orig))
-
     # ─────────────────────────────────────────
     #  KEY BINDINGS
     # ─────────────────────────────────────────
     def _bind_keys(self):
-        self.root.bind("<Left>",  lambda e: self._prev_frame())
-        self.root.bind("<Right>", lambda e: self._next_frame())
+        self.root.bind("<Left>",  lambda e: self._on_arrow(-1))
+        self.root.bind("<Right>", lambda e: self._on_arrow(1))
+        self.root.bind("<space>", lambda e: self._toggle_play())
+
+    def _on_arrow(self, delta):
+        # Las flechas detienen el play antes de avanzar
+        self._stop_play()
+        if self.annotation_mode:
+            self._navigate_list(delta)
+        elif self.cap:
+            self._show_video_frame(self.current_idx + delta)
 
     # ─────────────────────────────────────────
     #  APERTURA DE VIDEO
@@ -285,6 +240,7 @@ class App:
         if not path:
             return
 
+        self._stop_play()
         if self.cap:
             self.cap.release()
 
@@ -296,12 +252,15 @@ class App:
         self.saved_frames  = {}
         self.annotation_mode = False
 
+        self.frame_slider.config(to=self.total_frames - 1)
+        self.frame_slider.set(0)
+
         self.lbl_saved.config(text=f"📁 {self.output_dir}")
         self._build_video_controls()
         self._show_video_frame(0)
 
     # ─────────────────────────────────────────
-    #  NAVEGACIÓN DE FRAMES DE VIDEO
+    #  NAVEGACIÓN DE FRAMES
     # ─────────────────────────────────────────
     def _show_video_frame(self, idx):
         if not self.cap:
@@ -311,24 +270,55 @@ class App:
         ret, frame = self.cap.read()
         if not ret:
             return
-        self.current_idx  = idx
-        self.current_bgr  = frame
-        self.lbl_frame.config(
-            text=f"Frame {idx:05d} / {self.total_frames - 1:05d}"
-        )
+        self.current_idx = idx
+        self.current_bgr = frame
+        self.lbl_frame.config(text=f"Frame {idx:05d} / {self.total_frames - 1:05d}")
         self._render_image(cv2_to_pil(frame))
+        # Mover slider sin disparar callback
+        self._slider_dragging = True
+        self.frame_slider.set(idx)
+        self._slider_dragging = False
 
-    def _prev_frame(self):
-        if self.annotation_mode:
-            self._navigate_list(-1)
-        elif self.cap:
-            self._show_video_frame(self.current_idx - 1)
+    def _on_slider_move(self, val):
+        if self._slider_dragging or self.annotation_mode or not self.cap:
+            return
+        self._stop_play()
+        self._show_video_frame(int(float(val)))
 
-    def _next_frame(self):
-        if self.annotation_mode:
-            self._navigate_list(1)
-        elif self.cap:
-            self._show_video_frame(self.current_idx + 1)
+    # ─────────────────────────────────────────
+    #  PLAY / PAUSA
+    # ─────────────────────────────────────────
+    def _toggle_play(self):
+        if self._playing:
+            self._stop_play()
+        else:
+            self._start_play()
+
+    def _start_play(self):
+        if not self.cap or self.annotation_mode:
+            return
+        self._playing = True
+        if hasattr(self, "btn_play"):
+            self.btn_play.config(text="⏸  Pausa", bg=ACCENT)
+        self._play_step()
+
+    def _stop_play(self):
+        self._playing = False
+        if self._play_job:
+            self.root.after_cancel(self._play_job)
+            self._play_job = None
+        if hasattr(self, "btn_play"):
+            self.btn_play.config(text="▶  Play", bg="#2D5A8E")
+
+    def _play_step(self):
+        if not self._playing or not self.cap:
+            return
+        next_idx = self.current_idx + 1
+        if next_idx >= self.total_frames:
+            self._stop_play()
+            return
+        self._show_video_frame(next_idx)
+        self._play_job = self.root.after(33, self._play_step)  # ~30 fps
 
     # ─────────────────────────────────────────
     #  GUARDAR FRAME
@@ -349,8 +339,7 @@ class App:
         self.frame_counter += 1
 
         self.lbl_saved.config(text=f"💾 {self.frame_counter} frame(s) guardado(s)")
-        # Feedback visual en el canvas
-        self.canvas.create_rectangle(0, 0, 999, 999, fill="#1A4731",
+        self.canvas.create_rectangle(0, 0, 9999, 9999, fill="#1A4731",
                                       stipple="gray25", tags="flash")
         self.root.after(250, lambda: self.canvas.delete("flash"))
 
@@ -362,8 +351,9 @@ class App:
             messagebox.showwarning("Sin frames", "Guarda al menos un frame primero.")
             return
 
-        self.annotation_mode  = True
-        self.ann_frame_names  = sorted(
+        self._stop_play()
+        self.annotation_mode = True
+        self.ann_frame_names = sorted(
             self.saved_frames.keys(),
             key=lambda n: int(n.replace("frame", "") or 0)
         )
@@ -436,25 +426,18 @@ class App:
             messagebox.showerror("Error", f"No se puede leer: {path}")
             return
         self.ann_img_rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
-
         self._apply_points(self._load_points_from_json(name))
-
         self._redraw_annotation()
-        self._update_side_panel()
-        self._update_angles()
 
     def _reset_points(self):
         self.points         = {}
         self.next_point_idx = 0
         self._redraw_annotation()
-        self._update_side_panel()
-        self._update_angles()
 
     # ─────────────────────────────────────────
-    #  RENDER DE IMÁGENES EN CANVAS
+    #  RENDER
     # ─────────────────────────────────────────
-    def _render_image(self, pil_img: Image.Image, overlay=True):
-        """Dibuja pil_img en el canvas, centrada y escalada."""
+    def _render_image(self, pil_img: Image.Image):
         self.canvas.update_idletasks()
         cw = max(self.canvas.winfo_width(),  100)
         ch = max(self.canvas.winfo_height(), 100)
@@ -490,7 +473,6 @@ class App:
             ox, oy = self.points[label]
             return xo + ox * sc, yo + oy * sc
 
-        # ── Línea de esqueleto ──
         for i in range(len(POINT_ORDER) - 1):
             a, b = POINT_ORDER[i], POINT_ORDER[i + 1]
             if a in self.points and b in self.points:
@@ -500,7 +482,6 @@ class App:
                                          fill="#FFFFFF", width=2,
                                          dash=(6, 3), tags="overlay")
 
-        # ── Puntos ──
         for label in POINT_ORDER:
             if label not in self.points:
                 continue
@@ -539,38 +520,9 @@ class App:
         self.next_point_idx += 1
 
         self._redraw_annotation()
-        self._update_side_panel()
-        self._update_angles()
 
     # ─────────────────────────────────────────
-    #  PANEL LATERAL
-    # ─────────────────────────────────────────
-    def _update_side_panel(self):
-        if self.next_point_idx < len(POINT_ORDER):
-            nxt = POINT_ORDER[self.next_point_idx]
-            self.lbl_next_point.config(
-                text=f"▶  Click → {POINT_LABELS[nxt]}",
-                fg=POINT_COLORS[nxt],
-            )
-            self.lbl_point_count.config(
-                text=f"Punto {self.next_point_idx + 1} de {len(POINT_ORDER)}"
-            )
-        else:
-            self.lbl_next_point.config(text="✅ Todos marcados", fg="#6BCB77")
-            self.lbl_point_count.config(text="")
-
-    def _update_angles(self):
-        p = self.points
-        for name, p1k, vk, p2k in ANGLE_DEFINITIONS:
-            if p1k in p and vk in p and p2k in p:
-                angle = calc_angle(p[p1k], p[vk], p[p2k])
-                txt   = f"{angle:.1f}°" if angle is not None else "—°"
-            else:
-                txt = "—°"
-            self.angle_vars[name].set(txt)
-
-    # ─────────────────────────────────────────
-    #  GUARDAR JSON DE ÁNGULOS
+    #  GUARDAR JSON
     # ─────────────────────────────────────────
     def _save_json(self):
         if not self.points:
@@ -598,15 +550,11 @@ class App:
             "angulos": angulos,
         }
 
-        filename  = f"{self.ann_current_name}angulos.json"
-        json_path = os.path.join(ang_dir, filename)
-
+        json_path = os.path.join(ang_dir, f"{self.ann_current_name}angulos.json")
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
 
         self._redraw_annotation()
-        self._update_side_panel()
-        self._update_angles()
         self._refresh_listbox()
 
         orig_bg = self.btn_save_json.cget("bg")
@@ -616,9 +564,6 @@ class App:
         ))
 
 
-# ─────────────────────────────────────────────────────────
-#  ENTRY POINT
-# ─────────────────────────────────────────────────────────
 if __name__ == "__main__":
     root = tk.Tk()
     app  = App(root)
