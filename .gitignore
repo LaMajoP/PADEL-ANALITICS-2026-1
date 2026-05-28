@@ -1,3 +1,5 @@
 .venv/
 .env
 .DS_Store
+mejor_modelo_lr.joblib
+Videos_Processed/

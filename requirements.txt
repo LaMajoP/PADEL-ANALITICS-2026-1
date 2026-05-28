@@ -3,3 +3,8 @@ pandas
 opencv-python
 pillow
 ipykernel
+joblib
+matplotlib
+seaborn
+scikit-learn
+pygments
