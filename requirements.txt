@@ -7,4 +7,6 @@ joblib
 matplotlib
 seaborn
 scikit-learn
+xgboost
+umap-learn
 pygments

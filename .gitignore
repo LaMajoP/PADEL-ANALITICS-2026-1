@@ -2,4 +2,6 @@
 .env
 .DS_Store
 mejor_modelo_lr.joblib
+mejor_modelo_xgb.joblib
+predicciones_xgb.csv
 Videos_Processed/

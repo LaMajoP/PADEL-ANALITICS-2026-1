@@ -1,0 +1,82 @@
+cancha	partido	punto	frame	jugador	golpeo	cluster
+Cancha_1	Partido_15	Punto_6	324	j2	1	0
+Cancha_1	Partido_15	Punto_7	339	j2	1	1
+Cancha_1	Partido_3	Punto_6	951	j2	1	0
+Cancha_1	Partido_3	Punto_7	492	j2	1	0
+Cancha_1	Partido_5	Punto_4	252	j2	1	1
+Cancha_1	Partido_5	Punto_5	1191	j2	1	1
+Cancha_1	Partido_9	Punto_5	543	j2	1	1
+Cancha_1	Partido_9	Punto_6	690	j2	1	1
+Cancha_1	Partido_15	Punto_2	732	j2	1	1
+Cancha_1	Partido_15	Punto_8	1335	j2	1	1
+Cancha_1	Partido_15	Punto_9	486	j2	1	1
+Cancha_1	Partido_17	Punto_6	432	j2	1	0
+Cancha_1	Partido_19	Punto_1	258	j2	1	1
+Cancha_1	Partido_19	Punto_2	150	j2	1	1
+Cancha_1	Partido_19	Punto_3	69	j2	1	0
+Cancha_1	Partido_19	Punto_4	75	j2	1	2
+Cancha_1	Partido_19	Punto_5	351	j2	1	0
+Cancha_1	Partido_21	Punto_5	141	j2	1	1
+Cancha_1	Partido_21	Punto_6	114	j2	1	1
+Cancha_1	Partido_17	Punto_5	315	j2	1	1
+Cancha_1	Partido_1	Punto_10	81	j1	1	0
+Cancha_1	Partido_1	Punto_11	42	j1	1	0
+Cancha_1	Partido_1	Punto_1	48	j1	1	0
+Cancha_1	Partido_1	Punto_2	84	j1	1	0
+Cancha_1	Partido_1	Punto_6	102	j1	1	0
+Cancha_1	Partido_1	Punto_7	72	j1	1	0
+Cancha_1	Partido_1	Punto_7	195	j1	1	0
+Cancha_1	Partido_1	Punto_8	72	j1	1	0
+Cancha_1	Partido_1	Punto_9	186	j1	1	1
+Cancha_1	Partido_1	Punto_9	249	j1	1	1
+Cancha_1	Partido_15	Punto_1	1185	j1	1	1
+Cancha_1	Partido_37	Punto_1	141	j1	1	0
+Cancha_1	Partido_37	Punto_1	312	j1	1	1
+Cancha_1	Partido_37	Punto_1	534	j1	1	0
+Cancha_1	Partido_37	Punto_2	135	j1	1	1
+Cancha_1	Partido_37	Punto_2	273	j1	1	1
+Cancha_1	Partido_37	Punto_2	348	j1	1	0
+Cancha_1	Partido_37	Punto_3	159	j1	1	1
+Cancha_1	Partido_37	Punto_4	66	j1	1	1
+Cancha_1	Partido_37	Punto_10	90	j1	1	0
+Cancha_1	Partido_1	Punto_11	84	j3	1	1
+Cancha_1	Partido_1	Punto_7	15	j3	1	
+Cancha_1	Partido_1	Punto_8	117	j3	1	
+Cancha_1	Partido_1	Punto_9	108	j3	1	2
+Cancha_1	Partido_15	Punto_4	657	j3	1	0
+Cancha_1	Partido_15	Punto_5	432	j3	1	1
+Cancha_1	Partido_15	Punto_6	177	j3	1	1
+Cancha_1	Partido_3	Punto_5	156	j3	1	
+Cancha_1	Partido_3	Punto_5	831	j3	1	
+Cancha_1	Partido_3	Punto_6	1050	j3	1	
+Cancha_1	Partido_3	Punto_7	624	j3	1	1
+Cancha_1	Partido_3	Punto__11	1725	j3	1	
+Cancha_1	Partido_3	Punto__12	51	j3	1	
+Cancha_1	Partido_31	Punto_11	588	j3	1	
+Cancha_1	Partido_31	Punto_12	273	j3	1	0
+Cancha_1	Partido_33	Punto_1	138	j3	1	1
+Cancha_1	Partido_33	Punto_2	372	j3	1	1
+Cancha_1	Partido_33	Punto_3	255	j3	1	0
+Cancha_1	Partido_33	Punto_3	591	j3	1	1
+Cancha_1	Partido_35	Punto_1	294	j3	1	1
+Cancha_1	Partido_35	Punto_6	252	j3	1	1
+Cancha_1	Partido_1	Punto_3	81	j4	1	
+Cancha_1	Partido_1	Punto_4	78	j4	1	
+Cancha_1	Partido_1	Punto_6	171	j4	1	
+Cancha_1	Partido_1	Punto_7	153	j4	1	
+Cancha_1	Partido_1	Punto_9	225	j4	1	
+Cancha_1	Partido_15	Punto_1	243	j4	1	
+Cancha_1	Partido_15	Punto_1	1065	j4	1	0
+Cancha_1	Partido_15	Punto__10	276	j4	1	
+Cancha_1	Partido_15	Punto__10	492	j4	1	
+Cancha_1	Partido_15	Punto__11	78	j4	1	
+Cancha_1	Partido_35	Punto_11	366	j4	1	1
+Cancha_1	Partido_35	Punto_12	213	j4	1	1
+Cancha_1	Partido_37	Punto_10	183	j4	1	
+Cancha_1	Partido_37	Punto_12	12	j4	1	
+Cancha_1	Partido_37	Punto_12	114	j4	1	
+Cancha_1	Partido_37	Punto_1	348	j4	1	
+Cancha_1	Partido_37	Punto_3	345	j4	1	
+Cancha_1	Partido_37	Punto_5	78	j4	1	
+Cancha_1	Partido_37	Punto_5	177	j4	1	0
+Cancha_1	Partido_37	Punto_9	135	j4	1	
